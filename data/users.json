@@ -1,0 +1,23 @@
+[
+  {
+    "uid": "EMP-000",
+    "username": "lead",
+    "password": "$2b$10$ua2XJ6WeAHIHeONALh/R.edsKAXCGZ9IVYLHQCcldz0oWG9Von6VS",
+    "role": "Lead",
+    "employeeId": "EMP-000"
+  },
+  {
+    "uid": "EMP-002",
+    "username": "Kasim Vali",
+    "password": "$2b$10$UTcd60RiExN9rXEm9mBVc.R43EgyhgJ317QLgRoq83eAZZnOqdZCK",
+    "role": "Member",
+    "employeeId": "EMP-002"
+  },
+  {
+    "uid": "EMP-003",
+    "username": "Lokesh",
+    "password": "$2b$10$HwIoGXz01u8ywQ9PYP2yXuE6Oe3tqdkriiXS6iCtZX4gEge2wcwy2",
+    "role": "Member",
+    "employeeId": "EMP-003"
+  }
+]

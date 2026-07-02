@@ -1,0 +1,84 @@
+{
+  "profile": {
+    "uid": "EMP-002",
+    "name": "Dudekula Kasim Vali",
+    "domain": "WAS",
+    "doj": "2026-01-13",
+    "yearsOfExperience": 0.6,
+    "functions": "Application Channel Hosting",
+    "tribe": "Channels",
+    "squadName": "Channels",
+    "scrumMaster": "Margaux",
+    "chapterLead": "Stefaan",
+    "copReferent": "Jacek",
+    "teamPocOnshore": "Bogdan",
+    "assignmentGroupManager": "Jacek",
+    "hvd": "Yes",
+    "assignmentGroup": "APP_Channel_Hosting",
+    "role": "Member",
+    "status": "Active",
+    "lastUpdated": "2026-07-02T18:20:57.114Z",
+    "profileCompletion": 10
+  },
+  "leavePlans": [
+    {
+      "id": "1783013800905",
+      "month": "July",
+      "startDate": "2026-07-07",
+      "endDate": "2026-07-07",
+      "leaveDays": 1,
+      "backupPerson": "Rohan Pawar",
+      "status": "Approved",
+      "remarks": "Personal leave"
+    }
+  ],
+  "blockLeaves": [
+    {
+      "id": "1783013679098",
+      "name": "Summer Vacation",
+      "backupPerson": "Rohan",
+      "startDate": "2026-07-22",
+      "endDate": "2026-08-02",
+      "quarter": "Q3 (Jul-Sep)",
+      "communicatedToLead": "Yes",
+      "communicatedToOnshore": "Yes",
+      "status": "Approved"
+    }
+  ],
+  "onCall": {
+    "currentStatus": "On-Call Scheduled",
+    "comments": "On Call  Was Scheduled as per the discussion",
+    "history": []
+  },
+  "trainings": [
+    {
+      "id": "1783013862421",
+      "certificationName": "AWS Solution Architect",
+      "trainingName": "Cloud Computing",
+      "doneIn": "On-the-Job",
+      "doneDate": "2026-07-28",
+      "completionStatus": "In Progress",
+      "certificateFileName": "",
+      "progress": 76
+    }
+  ],
+  "demoSessions": [
+    {
+      "id": "1783013883837",
+      "standupDate": "2026-07-08",
+      "host": "Rohan",
+      "topic": "Presentation on Kubernetes",
+      "status": "Rescheduled"
+    }
+  ],
+  "monthlyUpdates": [
+    {
+      "id": "1783013898498",
+      "dateTime": "2026-07-09T23:41",
+      "releaseNumber": "R38494898",
+      "application": "EBWS",
+      "description": "Worked on deploying the application from my side ",
+      "activityDetails": "Fixed Bugs and add new features and daily standup Calls and Brainstrming sessions"
+    }
+  ]
+}

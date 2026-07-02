@@ -1,0 +1,29 @@
+{
+  "profile": {
+    "uid": "EMP-003",
+    "name": "Lokesh",
+    "domain": "IIS",
+    "doj": "2026-07-16",
+    "yearsOfExperience": 10,
+    "functions": "",
+    "tribe": "",
+    "squadName": "",
+    "scrumMaster": "",
+    "chapterLead": "",
+    "copReferent": "",
+    "teamPocOnshore": "",
+    "assignmentGroupManager": "",
+    "hvd": "",
+    "assignmentGroup": "",
+    "role": "Member",
+    "status": "Active",
+    "lastUpdated": "2026-07-02T20:11:13.435Z",
+    "profileCompletion": 10
+  },
+  "leavePlans": [],
+  "blockLeaves": [],
+  "onCall": [],
+  "trainings": [],
+  "demoSessions": [],
+  "monthlyUpdates": []
+}

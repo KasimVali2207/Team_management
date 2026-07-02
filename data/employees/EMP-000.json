@@ -1,0 +1,29 @@
+{
+  "profile": {
+    "uid": "J13957",
+    "name": "Team Lead",
+    "domain": "dnkrf",
+    "doj": "2026-07-23",
+    "yearsOfExperience": "5",
+    "functions": "Development",
+    "tribe": "Core Platform",
+    "squadName": "Avengers",
+    "scrumMaster": "John Doe",
+    "chapterLead": "Jane Smith",
+    "copReferent": "Mike Ross",
+    "teamPocOnshore": "Harvey Specter",
+    "assignmentGroupManager": "Louis Litt",
+    "hvd": "No",
+    "assignmentGroup": "Dev-Core",
+    "role": "Lead",
+    "status": "Active",
+    "lastUpdated": "2026-07-02T17:00:18.239Z",
+    "profileCompletion": 0
+  },
+  "leavePlans": [],
+  "blockLeaves": [],
+  "onCall": [],
+  "trainings": [],
+  "demoSessions": [],
+  "monthlyUpdates": []
+}
