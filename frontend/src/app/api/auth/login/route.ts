@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { StorageService } from '@/services/storage.service';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-in-prod';
+const JWT_SECRET = process.env.JWT_SECRET || 'Kasim';
 
 export async function POST(request: Request) {
   try {
