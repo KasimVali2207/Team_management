@@ -42,7 +42,7 @@ export function SectionPage({ tab }: { tab: string }) {
   const { data: employee, isLoading, refetch } = useQuery({
     queryKey: ["employee-section", user?.employeeId],
     queryFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/employees/${user?.employeeId}`, {
+      const res = await fetch(`/api/employees/${user?.employeeId}`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to load your data");

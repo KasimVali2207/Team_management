@@ -111,7 +111,7 @@ export default function DashboardPage() {
   const { data: dd, isLoading: ddLoading, refetch: refetchDashboard, dataUpdatedAt } = useQuery({
     queryKey: ['dashboard'],
     queryFn: async () => {
-      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/dashboard`, { credentials: 'include' });
+      const r = await fetch(`/api/dashboard`, { credentials: 'include' });
       if (!r.ok) throw new Error('Failed');
       return r.json();
     },
@@ -124,7 +124,7 @@ export default function DashboardPage() {
   const { data: memberData, isLoading: memberLoading, refetch: refetchMember } = useQuery({
     queryKey: ['member-profile', user?.employeeId],
     queryFn: async () => {
-      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/employees/${user?.employeeId}`, { credentials: 'include' });
+      const r = await fetch(`/api/employees/${user?.employeeId}`, { credentials: 'include' });
       if (!r.ok) throw new Error('Failed');
       return r.json();
     },
@@ -137,7 +137,7 @@ export default function DashboardPage() {
   const { data: activities, isLoading: activitiesLoading, refetch: refetchActivities } = useQuery({
     queryKey: ['activities'],
     queryFn: async () => {
-      const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/activities`, { credentials: 'include' });
+      const r = await fetch(`/api/activities`, { credentials: 'include' });
       if (!r.ok) throw new Error('Failed');
       return r.json();
     },
@@ -154,12 +154,12 @@ export default function DashboardPage() {
 
   const clearAll = async () => {
     if (!confirm("Clear all activity history?")) return;
-    const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/activities`, { method: "DELETE", credentials: "include" });
+    const r = await fetch(`/api/activities`, { method: "DELETE", credentials: "include" });
     if (r.ok) { toast.success("History cleared!"); refetchActivities(); }
   };
 
   const deleteOne = async (id: string) => {
-    const r = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/activities/${id}`, { method: "DELETE", credentials: "include" });
+    const r = await fetch(`/api/activities/${id}`, { method: "DELETE", credentials: "include" });
     if (r.ok) { toast.success("Deleted!"); refetchActivities(); }
   };
 

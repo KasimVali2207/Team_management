@@ -59,7 +59,7 @@ export default function DemoSessionsTab({ data, onUpdate, employeeId, readOnly }
   const handleSave = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/employees/${employeeId}/demoSessions`, {
+      const res = await fetch(`/api/employees/${employeeId}/demoSessions`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(records),

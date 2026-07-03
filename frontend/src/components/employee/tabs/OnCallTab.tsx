@@ -37,7 +37,7 @@ export default function OnCallTab({ data, onUpdate, employeeId, readOnly }: { da
   const persistOnCall = async (updatedData: OnCallData) => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/employees/${employeeId}/onCall`, {
+      const res = await fetch(`/api/employees/${employeeId}/onCall`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedData),

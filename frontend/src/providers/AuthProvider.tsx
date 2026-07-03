@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { data, isLoading } = useQuery({
     queryKey: ['me'],
     queryFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/auth/me`, {
+      const res = await fetch(`/api/auth/me`, {
         credentials: 'include'
       });
       if (!res.ok) throw new Error('Not authenticated');
@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+    await fetch(`/api/auth/logout`, { method: 'POST', credentials: 'include' });
     setUser(null);
     queryClient.setQueryData(['me'], null);
     router.push('/login');

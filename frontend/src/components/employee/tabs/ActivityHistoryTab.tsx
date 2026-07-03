@@ -58,7 +58,7 @@ export default function ActivityHistoryTab({ data, employeeId, onUpdate, readOnl
 
   const fetchLogs = async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/activities`, { credentials: "include" });
+      const res = await fetch(`/api/activities`, { credentials: "include" });
       if (res.ok) {
         const all: ActivityEntry[] = await res.json();
         // Filter to this employee's activities
@@ -78,7 +78,7 @@ export default function ActivityHistoryTab({ data, employeeId, onUpdate, readOnl
   const handleClearAll = async () => {
     if (confirm("Are you sure you want to clear all activities for this employee?")) {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/activities`, { method: "DELETE", credentials: "include" });
+        const res = await fetch(`/api/activities`, { method: "DELETE", credentials: "include" });
         if (res.ok) {
           toast.success("Activity log cleared!");
           fetchLogs();
@@ -91,7 +91,7 @@ export default function ActivityHistoryTab({ data, employeeId, onUpdate, readOnl
   const handleDeleteItem = async (id?: string) => {
     if (!id) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/activities/${id}`, { method: "DELETE", credentials: "include" });
+      const res = await fetch(`/api/activities/${id}`, { method: "DELETE", credentials: "include" });
       if (res.ok) {
         toast.success("Log entry deleted!");
         fetchLogs();

@@ -29,7 +29,7 @@ export default function PersonalDetailsTab({ data, onUpdate, employeeId, readOnl
   const handleSave = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/employees/${employeeId}/profile`, {
+      const res = await fetch(`/api/employees/${employeeId}/profile`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...form, lastUpdated: new Date().toISOString() }),

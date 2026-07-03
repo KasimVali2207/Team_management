@@ -45,7 +45,7 @@ export function LeadSectionPage({ tab }: { tab: string }) {
   const { data: profiles, isLoading: profilesLoading } = useQuery<any[]>({
     queryKey: ["employees-list-summaries"],
     queryFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/employees`, {
+      const res = await fetch(`/api/employees`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to load team profiles");
@@ -74,7 +74,7 @@ export function LeadSectionPage({ tab }: { tab: string }) {
   const { data: selectedMember, isLoading: memberLoading, refetch: refetchMember } = useQuery({
     queryKey: ["employee-full-details", selectedMemberId],
     queryFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/employees/${selectedMemberId}`, {
+      const res = await fetch(`/api/employees/${selectedMemberId}`, {
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to load member details");

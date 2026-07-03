@@ -76,7 +76,7 @@ export default function TrainingTab({ data, onUpdate, employeeId, readOnly }: { 
   const handleSave = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/employees/${employeeId}/trainings`, {
+      const res = await fetch(`/api/employees/${employeeId}/trainings`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(records),

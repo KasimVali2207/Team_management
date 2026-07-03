@@ -52,7 +52,7 @@ export default function MonthlyUpdatesTab({ data, onUpdate, employeeId, readOnly
   const handleSave = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/employees/${employeeId}/monthlyUpdates`, {
+      const res = await fetch(`/api/employees/${employeeId}/monthlyUpdates`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(records),

@@ -43,7 +43,7 @@ export default function LeavePlansTab({ data, onUpdate, employeeId, readOnly }: 
   const handleSave = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/employees/${employeeId}/leavePlans`, { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(leaves), credentials:"include" });
+      const res = await fetch(`/api/employees/${employeeId}/leavePlans`, { method:"PUT", headers:{"Content-Type":"application/json"}, body:JSON.stringify(leaves), credentials:"include" });
       if (!res.ok) throw new Error("Update failed");
       toast.success("Leave plans saved!"); onUpdate();
     } catch(err:any) { toast.error(err.message); } finally { setLoading(false); }

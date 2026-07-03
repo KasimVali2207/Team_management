@@ -39,7 +39,7 @@ function RemoveMemberButton({ employee, onRemoved }: { employee: Employee; onRem
 
   const { mutate, isPending } = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/employees/${employee.uid}`, {
+      const res = await fetch(`/api/employees/${employee.uid}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -101,7 +101,7 @@ export default function TeamMembersPage() {
   const { data: employees, isLoading } = useQuery<Employee[]>({
     queryKey: ['employees'],
     queryFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"}/api/employees`, { credentials: 'include' });
+      const res = await fetch(`/api/employees`, { credentials: 'include' });
       if (!res.ok) throw new Error('Failed to fetch');
       return res.json();
     }
