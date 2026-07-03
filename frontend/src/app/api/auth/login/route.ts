@@ -13,8 +13,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Username and password are required' }, { status: 400 });
     }
 
-    const users = await StorageService.getUsers();
-    const user = users.find((u: any) => u.username.toLowerCase() === username.toLowerCase().trim());
+    const user = await StorageService.getUserByUsername(username);
 
     if (!user) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
