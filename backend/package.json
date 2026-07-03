@@ -7,6 +7,8 @@
     "build": "tsc",
     "dev": "nodemon src/index.ts",
     "seed": "ts-node src/seed.ts",
+    "reset-db": "node reset-db.js",
+    "ensure-lead": "node ensure-lead.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
