@@ -55,29 +55,32 @@ function KPICard({ title, value, sub, icon: Icon, color, href, delay = 0 }: {
       transition={{ delay, type: "spring", stiffness: 100 }} 
       className="h-full"
     >
-      <div className="h-full group relative rounded-2xl border border-border/40 p-6 flex flex-col gap-4 overflow-hidden bg-card/60 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-primary/5 hover:border-primary/40 cursor-pointer">
-        {/* premium soft glow blur effect */}
-        <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full opacity-[0.08] blur-3xl bg-primary transition-opacity duration-300 group-hover:opacity-[0.15]" />
+      <div className={`h-full group relative rounded-2xl border p-6 flex flex-col gap-4 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl cursor-pointer backdrop-blur-md ${color}`}>
+        {/* Soft background glass overlay */}
+        <div className="absolute inset-0 bg-white/5 dark:bg-black/5 pointer-events-none" />
         
-        <div className="flex items-start justify-between">
-          <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-105 ${color}`}>
-            <Icon className="w-5 h-5" />
+        {/* Soft hover glow */}
+        <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full opacity-[0.1] blur-3xl bg-current transition-opacity duration-300 group-hover:opacity-[0.2] pointer-events-none" />
+        
+        <div className="flex items-start justify-between z-10">
+          <div className="w-10 h-10 rounded-xl bg-background/60 dark:bg-background/20 backdrop-blur-md flex items-center justify-center flex-shrink-0 shadow-sm border border-foreground/5 transition-transform duration-300 group-hover:scale-105">
+            <Icon className="w-5 h-5 text-current" />
           </div>
           {href && (
-            <div className="w-7 h-7 rounded-full bg-muted/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <ArrowRight className="w-3.5 h-3.5 text-foreground/75" />
+            <div className="w-7 h-7 rounded-full bg-background/50 dark:bg-background/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+              <ArrowRight className="w-3.5 h-3.5 text-current" />
             </div>
           )}
         </div>
         
-        <div className="space-y-1">
-          <div className="text-3xl font-black tracking-tight leading-none bg-clip-text text-foreground">
+        <div className="space-y-1.5 z-10">
+          <div className="text-3xl font-extrabold tracking-tight leading-none text-foreground dark:text-white">
             {value}
           </div>
-          {sub && <div className="text-xs font-semibold text-muted-foreground/80">{sub}</div>}
+          {sub && <div className="text-xs font-medium text-foreground/80 dark:text-muted-foreground/90">{sub}</div>}
         </div>
         
-        <div className="text-[10px] font-extrabold uppercase tracking-widest text-muted-foreground/60 border-t border-border/25 pt-3 mt-auto">
+        <div className="text-[10px] font-extrabold uppercase tracking-widest text-foreground/60 dark:text-muted-foreground/60 border-t border-foreground/10 dark:border-white/10 pt-3 mt-auto z-10">
           {title}
         </div>
       </div>
@@ -192,8 +195,7 @@ export default function DashboardPage() {
       {/* ── WELCOME BANNER ─────────────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-        className="relative rounded-2xl overflow-hidden border p-6 flex items-center justify-between"
-        style={{ background: 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(222 47% 11%) 100%)' }}
+        className="relative rounded-2xl overflow-hidden border border-border/50 bg-gradient-to-br from-primary/8 via-primary/3 to-background dark:from-primary/15 dark:via-primary/5 dark:to-card p-6 flex items-center justify-between shadow-md"
       >
         {/* decorative circles */}
         <div className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-primary/8 blur-3xl pointer-events-none" />
