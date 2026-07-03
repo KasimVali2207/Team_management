@@ -10,18 +10,55 @@ export class StorageService {
     return UserModel.find({}).lean();
   }
 
+  /** Find one user by uid */
+  static async getUserByUid(uid: string): Promise<any | null> {
+    return UserModel.findOne({ uid }).lean();
+  }
+
+  /** Find one user by username (case-insensitive) */
+  static async getUserByUsername(username: string): Promise<any | null> {
+    return UserModel.findOne({
+      username: { $regex: new RegExp(`^${username.trim()}$`, 'i') },
+    }).lean();
+  }
+
+  /** Atomically insert a single new user */
+  static async addUser(user: {
+    uid: string;
+    username: string;
+    password: string;
+    role: string;
+    employeeId: string;
+  }): Promise<void> {
+    await UserModel.create(user);
+  }
+
+  /** Atomically delete a single user by uid */
+  static async removeUser(uid: string): Promise<void> {
+    await UserModel.deleteOne({ uid });
+  }
+
   /**
-   * Replace the entire users collection with the given array.
-   * Matches old file-based behaviour where the whole file was rewritten.
+   * Full-replace fallback (kept for compatibility with seed/migration).
+   * Prefer addUser / removeUser for normal operations.
    */
   static async saveUsers(users: any[]): Promise<void> {
-    // Upsert each user by uid, delete any uid no longer in the list
     const uids = users.map((u) => u.uid);
     await UserModel.deleteMany({ uid: { $nin: uids } });
     for (const user of users) {
-      const { _id, __v, ...rest } = user; // strip Mongoose internals if present
+      const { _id, __v, ...rest } = user;
       await UserModel.updateOne({ uid: user.uid }, { $set: rest }, { upsert: true });
     }
+  }
+
+  /** Get the highest EMP-NNN number currently in use */
+  static async getNextUid(): Promise<string> {
+    const users = await UserModel.find({}, { uid: 1 }).lean();
+    const max = users.reduce((m: number, u: any) => {
+      const match = u.uid?.match(/EMP-(\d+)/);
+      return match ? Math.max(m, parseInt(match[1])) : m;
+    }, 0);
+    return `EMP-${String(max + 1).padStart(3, '0')}`;
   }
 
   // ── EMPLOYEES ──────────────────────────────────────────────────────────
@@ -29,7 +66,6 @@ export class StorageService {
   static async getEmployee(uid: string): Promise<any | null> {
     const doc = await EmployeeModel.findOne({ uid }).lean();
     if (!doc) return null;
-    // Strip Mongoose internals before returning
     const { _id, __v, ...rest } = doc as any;
     return rest;
   }
@@ -41,6 +77,23 @@ export class StorageService {
       { $set: { uid, ...rest } },
       { upsert: true, new: true }
     );
+  }
+
+  /** Update a single named section of an employee document atomically */
+  static async updateEmployeeSection(
+    uid: string,
+    section: string,
+    value: any
+  ): Promise<any | null> {
+    const update: Record<string, any> = { [`${section}`]: value };
+    if (section === 'profile') {
+      update['profile.lastUpdated'] = new Date().toISOString();
+    }
+    return EmployeeModel.findOneAndUpdate(
+      { uid },
+      { $set: update },
+      { new: true }
+    ).lean();
   }
 
   static async deleteEmployee(uid: string): Promise<void> {
@@ -68,7 +121,9 @@ export class StorageService {
   // ── ACTIVITY LOGS ──────────────────────────────────────────────────────
 
   static async getActivityLogs(): Promise<any[]> {
-    const docs = await ActivityLogModel.find({}).sort({ timestamp: -1 }).lean();
+    const docs = await ActivityLogModel.find({})
+      .sort({ timestamp: -1 })
+      .lean();
     return docs.map(({ _id, __v, ...rest }: any) => rest);
   }
 
@@ -79,14 +134,16 @@ export class StorageService {
       ...activity,
       timestamp: new Date().toISOString(),
     });
-    // Keep only last 100 activity logs
+    // Keep only the latest 100 logs
     const count = await ActivityLogModel.countDocuments();
     if (count > 100) {
       const oldest = await ActivityLogModel.find({})
         .sort({ timestamp: 1 })
         .limit(count - 100)
         .select('_id');
-      await ActivityLogModel.deleteMany({ _id: { $in: oldest.map((d) => d._id) } });
+      await ActivityLogModel.deleteMany({
+        _id: { $in: oldest.map((d) => d._id) },
+      });
     }
   }
 

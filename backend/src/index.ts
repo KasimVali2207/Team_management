@@ -95,8 +95,7 @@ app.get('/api/auth/me', authenticate, async (req: AuthRequest, res) => {
     return;
   }
   try {
-    const users = await StorageService.getUsers();
-    const user = users.find((u: any) => u.uid === req.user?.uid);
+    const user = await StorageService.getUserByUid(req.user.uid);
     if (!user) {
       res.status(404).json({ message: 'User not found' });
       return;
@@ -144,31 +143,29 @@ app.post('/api/employees', authenticate, requireRole('Lead'), async (req: AuthRe
       return;
     }
 
-    // Check username uniqueness
-    const users = await StorageService.getUsers();
-    const exists = users.find((u: any) => u.username.toLowerCase() === username.toLowerCase().trim());
-    if (exists) {
+    // Atomic uniqueness check — no race condition with file-read pattern
+    const existing = await StorageService.getUserByUsername(username);
+    if (existing) {
       res.status(409).json({ message: 'Username already taken — choose a different one' });
       return;
     }
 
-    // Generate next UID (find max existing EMP number + 1)
-    const allUsers = await StorageService.getUsers();
-    const maxNum = allUsers.reduce((max: number, u: any) => {
-      const match = u.uid?.match(/EMP-(\d+)/);
-      return match ? Math.max(max, parseInt(match[1])) : max;
-    }, 0);
-    const uid = `EMP-${String(maxNum + 1).padStart(3, '0')}`;
+    // Atomic UID generation
+    const uid = await StorageService.getNextUid();
 
-    // Hash the Lead-provided password
+    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user entry
-    const newUser = { uid, username: username.trim(), password: hashedPassword, role: 'Member', employeeId: uid };
-    users.push(newUser);
-    await StorageService.saveUsers(users);
+    // Atomically insert user document
+    await StorageService.addUser({
+      uid,
+      username: username.trim(),
+      password: hashedPassword,
+      role: 'Member',
+      employeeId: uid,
+    });
 
-    // Create employee JSON file
+    // Create employee document
     const employeeData = {
       profile: {
         uid,
@@ -193,7 +190,7 @@ app.post('/api/employees', authenticate, requireRole('Lead'), async (req: AuthRe
       },
       leavePlans: [],
       blockLeaves: [],
-      onCall: [],
+      onCall: {},
       trainings: [],
       demoSessions: [],
       monthlyUpdates: []
@@ -201,7 +198,6 @@ app.post('/api/employees', authenticate, requireRole('Lead'), async (req: AuthRe
 
     await StorageService.updateEmployee(uid, employeeData);
 
-    // Log activity
     await StorageService.logActivity({
       uid: req.user?.uid,
       employeeId: req.user?.employeeId,
@@ -209,7 +205,7 @@ app.post('/api/employees', authenticate, requireRole('Lead'), async (req: AuthRe
       targetId: uid
     });
 
-    res.status(201).json({ message: 'Employee created successfully', uid, defaultPassword: 'Member@2026' });
+    res.status(201).json({ message: 'Employee created successfully', uid });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error creating employee' });
@@ -248,9 +244,9 @@ app.delete('/api/employees/:id', authenticate, requireRole('Lead'), async (req: 
   try {
     const id = req.params.id as string;
 
-    const users = await StorageService.getUsers();
-    const matchedUser = users.find((u: any) => u.uid === id || u.employeeId === id);
-    const empId = matchedUser ? matchedUser.employeeId : id;
+    // Resolve uid → employeeId atomically
+    const matchedUser = await StorageService.getUserByUid(id);
+    const empId = matchedUser?.employeeId ?? id;
 
     if (empId === 'EMP-000') {
       res.status(400).json({ message: 'Cannot remove the Lead account' });
@@ -263,14 +259,9 @@ app.delete('/api/employees/:id', authenticate, requireRole('Lead'), async (req: 
       return;
     }
 
-    // Delete JSON file
-    try {
-      await StorageService.deleteEmployee(empId);
-    } catch (_) { }
-
-    // Also remove from users.json
-    const filtered = users.filter((u: any) => u.uid !== id && u.employeeId !== empId);
-    await StorageService.saveUsers(filtered);
+    // Atomically delete employee document and user document
+    await StorageService.deleteEmployee(empId);
+    await StorageService.removeUser(id);
 
     await StorageService.logActivity({
       uid: req.user?.uid,
@@ -292,9 +283,9 @@ app.put('/api/employees/:id/:section', authenticate, async (req: AuthRequest, re
     const id = req.params.id as string;
     const section = req.params.section as string;
 
-    const users = await StorageService.getUsers();
-    const matchedUser = users.find((u: any) => u.uid === id || u.employeeId === id);
-    const empId = matchedUser ? matchedUser.employeeId : id;
+    // Resolve uid atomically — no need to fetch all users
+    const matchedUser = await StorageService.getUserByUid(id);
+    const empId = matchedUser?.employeeId ?? id;
 
     if (req.user?.role !== 'Lead' && req.user?.employeeId !== empId) {
       res.status(403).json({ message: 'Forbidden' });
@@ -307,17 +298,12 @@ app.put('/api/employees/:id/:section', authenticate, async (req: AuthRequest, re
       return;
     }
 
-    const employee = await StorageService.getEmployee(empId);
-    if (!employee) {
+    // Atomic section update — only touches the specific field, no full-doc rewrite
+    const updated = await StorageService.updateEmployeeSection(empId, section, req.body);
+    if (!updated) {
       res.status(404).json({ message: 'Employee not found' });
       return;
     }
-
-    employee[section] = req.body;
-    if (section === 'profile') {
-      employee[section].lastUpdated = new Date().toISOString();
-    }
-    await StorageService.updateEmployee(empId, employee);
 
     const sectionLabels: Record<string, string> = {
       profile: 'Updated Personal Details',
@@ -331,12 +317,12 @@ app.put('/api/employees/:id/:section', authenticate, async (req: AuthRequest, re
 
     await StorageService.logActivity({
       uid: req.user?.uid,
-      employeeId: empId,           // the employee whose data changed
+      employeeId: empId,
       action: sectionLabels[section] || `Updated ${section}`,
       targetId: id
     });
 
-    res.json({ message: 'Updated successfully', employee });
+    res.json({ message: 'Updated successfully', employee: updated });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error updating employee' });
