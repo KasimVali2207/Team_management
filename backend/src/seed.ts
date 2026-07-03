@@ -1,80 +1,76 @@
+/**
+ * Migration script: imports existing JSON files into MongoDB.
+ * Run once with: npx ts-node src/seed.ts
+ */
+import mongoose from 'mongoose';
 import fs from 'fs/promises';
 import path from 'path';
-import bcrypt from 'bcrypt';
+import dotenv from 'dotenv';
+import { UserModel } from './models/user.model';
+import { EmployeeModel } from './models/employee.model';
+import { ActivityLogModel } from './models/activity-log.model';
+
+dotenv.config();
 
 const DATA_DIR = path.join(__dirname, '../../data');
 const EMPLOYEES_DIR = path.join(DATA_DIR, 'employees');
 
-async function ensureDir(dir: string) {
+async function readJson(filePath: string) {
   try {
-    await fs.mkdir(dir, { recursive: true });
-  } catch (error) {
-    // ignore
+    const raw = await fs.readFile(filePath, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return null;
   }
 }
 
-async function seed() {
-  await ensureDir(DATA_DIR);
-  await ensureDir(EMPLOYEES_DIR);
+async function migrate() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) throw new Error('MONGODB_URI not set in .env');
 
-  // --- Clear existing employee files ---
+  console.log('🔌 Connecting to MongoDB...');
+  await mongoose.connect(uri);
+  console.log('✅ Connected!');
+
+  // --- Users ---
+  const users = (await readJson(path.join(DATA_DIR, 'users.json'))) || [];
+  if (users.length > 0) {
+    await UserModel.deleteMany({});
+    await UserModel.insertMany(users);
+    console.log(`👥 Migrated ${users.length} users`);
+  }
+
+  // --- Employees ---
+  let empCount = 0;
   try {
     const files = await fs.readdir(EMPLOYEES_DIR);
+    await EmployeeModel.deleteMany({});
     for (const file of files) {
-      await fs.unlink(path.join(EMPLOYEES_DIR, file));
+      if (!file.endsWith('.json')) continue;
+      const data = await readJson(path.join(EMPLOYEES_DIR, file));
+      if (!data) continue;
+      const uid = file.replace('.json', '');
+      await EmployeeModel.create({ uid, ...data });
+      empCount++;
     }
-  } catch (_) {}
+    console.log(`🧑‍💼 Migrated ${empCount} employees`);
+  } catch (e: any) {
+    if (e.code !== 'ENOENT') throw e;
+  }
 
-  const hashPassword = async (password: string) => bcrypt.hash(password, 10);
-  const leadPassword = await hashPassword('Lead@2026');
+  // --- Activity Logs ---
+  const logs = (await readJson(path.join(DATA_DIR, 'activity_logs.json'))) || [];
+  if (logs.length > 0) {
+    await ActivityLogModel.deleteMany({});
+    await ActivityLogModel.insertMany(logs);
+    console.log(`📋 Migrated ${logs.length} activity logs`);
+  }
 
-  // Only the Team Lead account — no dummy members
-  const users = [
-    { uid: 'EMP-000', username: 'lead', password: leadPassword, role: 'Lead', employeeId: 'EMP-000' },
-  ];
-
-  await fs.writeFile(path.join(DATA_DIR, 'users.json'), JSON.stringify(users, null, 2));
-
-  // Lead's own profile
-  const leadProfile = {
-    profile: {
-      uid: 'EMP-000',
-      name: 'Team Lead',
-      domain: '',
-      doj: '',
-      yearsOfExperience: 0,
-      functions: '',
-      tribe: '',
-      squadName: '',
-      scrumMaster: '',
-      chapterLead: '',
-      copReferent: '',
-      teamPocOnshore: '',
-      assignmentGroupManager: '',
-      hvd: '',
-      assignmentGroup: '',
-      role: 'Lead',
-      status: 'Active',
-      lastUpdated: new Date().toISOString(),
-      profileCompletion: 0,
-    },
-    leavePlans: [],
-    blockLeaves: [],
-    onCall: [],
-    trainings: [],
-    demoSessions: [],
-    monthlyUpdates: []
-  };
-
-  await fs.writeFile(
-    path.join(EMPLOYEES_DIR, 'EMP-000.json'),
-    JSON.stringify(leadProfile, null, 2)
-  );
-
-  await fs.writeFile(path.join(DATA_DIR, 'activity_logs.json'), JSON.stringify([], null, 2));
-  await fs.writeFile(path.join(DATA_DIR, 'notifications.json'), JSON.stringify([], null, 2));
-
-  console.log('Seed completed — clean slate, only Lead account created.');
+  console.log('🎉 Migration complete!');
+  await mongoose.disconnect();
 }
 
-seed().catch(console.error);
+migrate().catch((err) => {
+  console.error('❌ Migration failed:', err);
+  process.exit(1);
+});

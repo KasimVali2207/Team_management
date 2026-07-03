@@ -1,95 +1,100 @@
-import fs from 'fs/promises';
-import path from 'path';
-
-const DATA_DIR = path.join(__dirname, '../../../data');
-const EMPLOYEES_DIR = path.join(DATA_DIR, 'employees');
+import { UserModel } from '../models/user.model';
+import { EmployeeModel } from '../models/employee.model';
+import { ActivityLogModel } from '../models/activity-log.model';
+import { NotificationModel } from '../models/notification.model';
 
 export class StorageService {
-  static async readJson(filePath: string) {
-    try {
-      const data = await fs.readFile(filePath, 'utf-8');
-      return JSON.parse(data);
-    } catch (error: any) {
-      if (error.code === 'ENOENT') {
-        return null;
-      }
-      throw error;
+  // ── USERS ──────────────────────────────────────────────────────────────
+
+  static async getUsers(): Promise<any[]> {
+    return UserModel.find({}).lean();
+  }
+
+  /**
+   * Replace the entire users collection with the given array.
+   * Matches old file-based behaviour where the whole file was rewritten.
+   */
+  static async saveUsers(users: any[]): Promise<void> {
+    // Upsert each user by uid, delete any uid no longer in the list
+    const uids = users.map((u) => u.uid);
+    await UserModel.deleteMany({ uid: { $nin: uids } });
+    for (const user of users) {
+      const { _id, __v, ...rest } = user; // strip Mongoose internals if present
+      await UserModel.updateOne({ uid: user.uid }, { $set: rest }, { upsert: true });
     }
   }
 
-  static async writeJson(filePath: string, data: any) {
-    await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+  // ── EMPLOYEES ──────────────────────────────────────────────────────────
+
+  static async getEmployee(uid: string): Promise<any | null> {
+    const doc = await EmployeeModel.findOne({ uid }).lean();
+    if (!doc) return null;
+    // Strip Mongoose internals before returning
+    const { _id, __v, ...rest } = doc as any;
+    return rest;
   }
 
-  static async getUsers() {
-    const data = await this.readJson(path.join(DATA_DIR, 'users.json'));
-    return data || [];
+  static async updateEmployee(uid: string, data: any): Promise<void> {
+    const { _id, __v, ...rest } = data;
+    await EmployeeModel.findOneAndUpdate(
+      { uid },
+      { $set: { uid, ...rest } },
+      { upsert: true, new: true }
+    );
   }
 
-  static async saveUsers(users: any[]) {
-    await this.writeJson(path.join(DATA_DIR, 'users.json'), users);
+  static async deleteEmployee(uid: string): Promise<void> {
+    await EmployeeModel.deleteOne({ uid });
   }
 
-  static async getEmployee(uid: string) {
-    return await this.readJson(path.join(EMPLOYEES_DIR, `${uid}.json`));
+  static async getAllEmployees(): Promise<any[]> {
+    const docs = await EmployeeModel.find({}).lean();
+    return docs.map(({ _id, __v, ...rest }: any) => rest);
   }
 
-  static async updateEmployee(uid: string, data: any) {
-    await this.writeJson(path.join(EMPLOYEES_DIR, `${uid}.json`), data);
+  // ── NOTIFICATIONS ──────────────────────────────────────────────────────
+
+  static async getNotifications(): Promise<any[]> {
+    return NotificationModel.find({}).lean();
   }
 
-  static async deleteEmployee(uid: string) {
-    await fs.unlink(path.join(EMPLOYEES_DIR, `${uid}.json`));
-  }
-
-  static async getAllEmployees() {
-    try {
-      const files = await fs.readdir(EMPLOYEES_DIR);
-      const employees = [];
-      for (const file of files) {
-        if (file.endsWith('.json')) {
-          const emp = await this.readJson(path.join(EMPLOYEES_DIR, file));
-          if (emp) employees.push(emp);
-        }
-      }
-      return employees;
-    } catch (error: any) {
-      if (error.code === 'ENOENT') return [];
-      throw error;
+  static async saveNotifications(notifications: any[]): Promise<void> {
+    await NotificationModel.deleteMany({});
+    if (notifications.length > 0) {
+      await NotificationModel.insertMany(notifications);
     }
   }
 
-  static async getNotifications() {
-    return (await this.readJson(path.join(DATA_DIR, 'notifications.json'))) || [];
+  // ── ACTIVITY LOGS ──────────────────────────────────────────────────────
+
+  static async getActivityLogs(): Promise<any[]> {
+    const docs = await ActivityLogModel.find({}).sort({ timestamp: -1 }).lean();
+    return docs.map(({ _id, __v, ...rest }: any) => rest);
   }
 
-  static async saveNotifications(notifications: any[]) {
-    await this.writeJson(path.join(DATA_DIR, 'notifications.json'), notifications);
-  }
-
-  static async getActivityLogs() {
-    return (await this.readJson(path.join(DATA_DIR, 'activity_logs.json'))) || [];
-  }
-
-  static async logActivity(activity: any) {
-    const logs = await this.getActivityLogs();
-    logs.unshift({
-      id: Math.random().toString(36).substring(2, 11),
+  static async logActivity(activity: any): Promise<void> {
+    const id = Math.random().toString(36).substring(2, 11);
+    await ActivityLogModel.create({
+      id,
       ...activity,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    // Keep only last 100 activities
-    if (logs.length > 100) logs.length = 100;
-    await this.writeJson(path.join(DATA_DIR, 'activity_logs.json'), logs);
+    // Keep only last 100 activity logs
+    const count = await ActivityLogModel.countDocuments();
+    if (count > 100) {
+      const oldest = await ActivityLogModel.find({})
+        .sort({ timestamp: 1 })
+        .limit(count - 100)
+        .select('_id');
+      await ActivityLogModel.deleteMany({ _id: { $in: oldest.map((d) => d._id) } });
+    }
   }
 
-  static async clearActivityLogs() {
-    await this.writeJson(path.join(DATA_DIR, 'activity_logs.json'), []);
+  static async clearActivityLogs(): Promise<void> {
+    await ActivityLogModel.deleteMany({});
   }
 
-  static async deleteActivityLog(id: string) {
-    const logs = await this.getActivityLogs();
-    const filtered = logs.filter((log: any) => log.id !== id);
-    await this.writeJson(path.join(DATA_DIR, 'activity_logs.json'), filtered);
+  static async deleteActivityLog(id: string): Promise<void> {
+    await ActivityLogModel.deleteOne({ id });
   }
 }

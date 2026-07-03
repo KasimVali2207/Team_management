@@ -1,8 +1,10 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import { StorageService } from './services/storage.service';
 import { authenticate, AuthRequest, requireRole } from './middlewares/auth.middleware';
 
@@ -10,10 +12,10 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-in-prod';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+const MONGODB_URI = process.env.MONGODB_URI || '';
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (server-to-server, curl, etc.)
     if (!origin) return callback(null, true);
     const allowed = [
       FRONTEND_URL,
@@ -58,8 +60,8 @@ app.post('/api/auth/login', async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: true,          // required for sameSite: 'none'
-      sameSite: 'none',      // required for cross-origin (Netlify ↔ Railway)
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 24 * 60 * 60 * 1000 // 1 day
     });
 
@@ -264,7 +266,7 @@ app.delete('/api/employees/:id', authenticate, requireRole('Lead'), async (req: 
     // Delete JSON file
     try {
       await StorageService.deleteEmployee(empId);
-    } catch (_) {}
+    } catch (_) { }
 
     // Also remove from users.json
     const filtered = users.filter((u: any) => u.uid !== id && u.employeeId !== empId);
@@ -359,7 +361,7 @@ app.get('/api/dashboard', authenticate, requireRole('Lead'), async (req: AuthReq
     const memberSummaries: any[] = [];
 
     members.forEach(emp => {
-      const profileFields = ['name','domain','doj','yearsOfExperience','functions','tribe','squadName','scrumMaster','chapterLead','copReferent','teamPocOnshore','assignmentGroupManager','hvd','assignmentGroup'];
+      const profileFields = ['name', 'domain', 'doj', 'yearsOfExperience', 'functions', 'tribe', 'squadName', 'scrumMaster', 'chapterLead', 'copReferent', 'teamPocOnshore', 'assignmentGroupManager', 'hvd', 'assignmentGroup'];
       const filled = profileFields.filter(f => emp.profile?.[f] !== undefined && emp.profile?.[f] !== null && emp.profile?.[f] !== '').length;
       const completion = Math.round((filled / profileFields.length) * 100);
       profileCompletionSum += completion;
@@ -438,6 +440,18 @@ app.delete('/api/activities/:id', authenticate, async (req: AuthRequest, res) =>
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
-});
+async function start() {
+  try {
+    if (!MONGODB_URI) throw new Error('MONGODB_URI env var is not set!');
+    await mongoose.connect(MONGODB_URI);
+    console.log('✅ Connected to MongoDB');
+    app.listen(PORT, () => {
+      console.log(`🚀 Backend running on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('❌ Failed to start server:', err);
+    process.exit(1);
+  }
+}
+
+start();
