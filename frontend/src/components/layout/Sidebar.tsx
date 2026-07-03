@@ -1,7 +1,6 @@
 "use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -31,6 +30,7 @@ interface SidebarProps {
 
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
 
   const isLead = user?.role === 'Lead';
@@ -54,12 +54,15 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     <div className="flex h-full flex-col bg-background/95 backdrop-blur-xl border-r border-border/40">
       {/* Sidebar Header */}
       <div className="flex h-[68px] items-center justify-between border-b border-border/20 px-6">
-        <Link href="/dashboard" className="flex items-center gap-2.5 group">
+        <div 
+          onClick={() => router.push('/dashboard')} 
+          className="flex items-center gap-2.5 group cursor-pointer"
+        >
           <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25 transition-transform duration-300 group-hover:scale-110">
             <Sparkles className="w-4 h-4 text-primary-foreground animate-pulse" />
           </div>
           <span className="text-lg font-bold tracking-widest text-foreground bg-clip-text">TMP</span>
-        </Link>
+        </div>
         {onClose && (
           <Button variant="ghost" size="icon" className="md:hidden text-muted-foreground hover:text-foreground" onClick={onClose}>
             <X className="h-5 w-5" />
@@ -74,14 +77,16 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
-              <Link
+              <button
                 key={index}
-                href={item.href}
-                onClick={onClose}
+                onClick={() => {
+                  router.push(item.href);
+                  if (onClose) onClose();
+                }}
                 onMouseEnter={() => setHoveredIdx(index)}
                 onMouseLeave={() => setHoveredIdx(null)}
                 className={cn(
-                  "relative flex items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 group overflow-hidden z-10",
+                  "relative flex items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 group overflow-hidden z-10 cursor-pointer border-0 bg-transparent text-left w-full focus:outline-none",
                   isActive
                     ? "text-primary font-bold shadow-sm shadow-primary/5"
                     : "text-muted-foreground hover:text-foreground"
@@ -115,7 +120,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                   isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
                 )} />
                 {item.name}
-              </Link>
+              </button>
             );
           })}
         </nav>
