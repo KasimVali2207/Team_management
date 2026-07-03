@@ -85,13 +85,24 @@ export class StorageService {
     section: string,
     value: any
   ): Promise<any | null> {
-    const update: Record<string, any> = { [`${section}`]: value };
+    let mongoUpdate: Record<string, any>;
+
     if (section === 'profile') {
-      update['profile.lastUpdated'] = new Date().toISOString();
+      // For profile: merge individual fields using dot-notation so we never
+      // accidentally wipe uid, role, profileCompletion, etc.
+      mongoUpdate = {};
+      for (const [k, v] of Object.entries(value)) {
+        mongoUpdate[`profile.${k}`] = v;
+      }
+      mongoUpdate['profile.lastUpdated'] = new Date().toISOString();
+    } else {
+      // For array sections (leavePlans, trainings, etc.) replace wholesale
+      mongoUpdate = { [section]: value };
     }
+
     return EmployeeModel.findOneAndUpdate(
       { uid },
-      { $set: update },
+      { $set: mongoUpdate },
       { new: true }
     ).lean();
   }

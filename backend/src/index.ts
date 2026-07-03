@@ -217,9 +217,9 @@ app.get('/api/employees/:id', authenticate, async (req: AuthRequest, res) => {
   try {
     const id = req.params.id as string;
 
-    const users = await StorageService.getUsers();
-    const matchedUser = users.find((u: any) => u.uid === id || u.employeeId === id);
-    const empId = matchedUser ? matchedUser.employeeId : id;
+    // Resolve uid atomically — supports both uid and employeeId as the param
+    const matchedUser = await StorageService.getUserByUid(id);
+    const empId = matchedUser?.employeeId ?? id;
 
     if (req.user?.role !== 'Lead' && req.user?.employeeId !== empId) {
       res.status(403).json({ message: 'Forbidden' });
