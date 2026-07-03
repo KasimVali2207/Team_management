@@ -14,7 +14,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useTheme } from "next-themes";
 import { useState, useEffect } from 'react';
 
-export function Navbar() {
+interface NavbarProps {
+  onMenuClick?: () => void;
+}
+
+export function Navbar({ onMenuClick }: NavbarProps) {
   const { user, logout } = useAuth();
   const { setTheme, theme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -22,8 +26,8 @@ export function Navbar() {
   useEffect(() => setMounted(true), []);
 
   return (
-    <header className="sticky top-0 z-10 flex h-[60px] items-center gap-4 border-b bg-background px-4 md:px-6">
-      <Button variant="outline" size="icon" className="md:hidden">
+    <header className="sticky top-0 z-40 flex h-[68px] items-center gap-4 border-b bg-background/80 backdrop-blur-md px-4 md:px-6">
+      <Button variant="outline" size="icon" className="md:hidden border-border/60 hover:bg-muted" onClick={onMenuClick}>
         <Menu className="h-5 w-5" />
         <span className="sr-only">Toggle Menu</span>
       </Button>
