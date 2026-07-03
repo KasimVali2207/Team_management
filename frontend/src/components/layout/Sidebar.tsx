@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/providers/AuthProvider';
 import { cn } from '@/lib/utils';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
   Users,
@@ -46,6 +48,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
     { name: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];
 
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+
   const SidebarContent = () => (
     <div className="flex h-full flex-col bg-background/95 backdrop-blur-xl border-r border-border/40">
       {/* Sidebar Header */}
@@ -74,13 +78,33 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 key={index}
                 href={item.href}
                 onClick={onClose}
+                onMouseEnter={() => setHoveredIdx(index)}
+                onMouseLeave={() => setHoveredIdx(null)}
                 className={cn(
-                  "relative flex items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 group overflow-hidden",
+                  "relative flex items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-300 group overflow-hidden z-10",
                   isActive
-                    ? "bg-primary/10 text-primary shadow-sm shadow-primary/5"
-                    : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    ? "text-primary font-bold shadow-sm shadow-primary/5"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
+                {/* Smooth sliding active background link pill */}
+                {isActive && (
+                  <motion.span
+                    layoutId="sidebar-active-pill"
+                    className="absolute inset-0 bg-primary/10 dark:bg-primary/15 rounded-xl -z-10"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+
+                {/* Magnetic hovered sliding background link pill */}
+                {hoveredIdx === index && (
+                  <motion.span
+                    layoutId="sidebar-hover-pill"
+                    className="absolute inset-0 bg-muted/60 dark:bg-muted/30 rounded-xl -z-10"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+
                 {/* Active side indicator glow */}
                 {isActive && (
                   <span className="absolute left-0 top-1/4 bottom-1/4 w-1 rounded-r-full bg-primary" />
