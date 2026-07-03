@@ -46,8 +46,8 @@ export function AddMemberDialog() {
     },
     onSuccess: (data) => {
       toast.success(
-        `✅ ${form.name} added! UID: ${data.uid} — Share their login credentials.`,
-        { duration: 6000 }
+        `✅ ${form.name} added! Share credentials → Username: ${data.username} · Password: ${data.password}`,
+        { duration: 10000 }
       );
       queryClient.invalidateQueries({ queryKey: ["employees"] });
       setOpen(false);

@@ -205,7 +205,12 @@ app.post('/api/employees', authenticate, requireRole('Lead'), async (req: AuthRe
       targetId: uid
     });
 
-    res.status(201).json({ message: 'Employee created successfully', uid });
+    res.status(201).json({
+      message: 'Employee created successfully',
+      uid,
+      username: username.trim(),
+      password, // plain-text so Lead can share with new member
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Error creating employee' });
