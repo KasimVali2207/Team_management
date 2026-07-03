@@ -9,9 +9,23 @@ import { authenticate, AuthRequest, requireRole } from './middlewares/auth.middl
 const app = express();
 const PORT = process.env.PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key-change-in-prod';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 app.use(cors({
-  origin: true,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (server-to-server, curl, etc.)
+    if (!origin) return callback(null, true);
+    const allowed = [
+      FRONTEND_URL,
+      'http://localhost:3000',
+      'http://localhost:3001',
+    ];
+    if (allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    }
+  },
   credentials: true
 }));
 app.use(express.json());
@@ -44,8 +58,8 @@ app.post('/api/auth/login', async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,          // required for sameSite: 'none'
+      sameSite: 'none',      // required for cross-origin (Netlify ↔ Railway)
       maxAge: 24 * 60 * 60 * 1000 // 1 day
     });
 
